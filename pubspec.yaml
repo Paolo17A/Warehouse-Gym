@@ -1,0 +1,93 @@
+name: the_warehouse_gym
+description: The Warehouse Gym — Clean Architecture Flutter App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  hooks_riverpod: ^2.6.1
+  flutter_hooks: ^0.21.2
+
+  # Dependency injection
+  get_it: ^8.0.3
+
+  # Navigation
+  go_router: ^14.6.3
+
+  # Functional programming
+  dartz: ^0.10.1
+
+  # Toast notifications
+  toastification: ^2.3.0
+
+  # Connectivity
+  connectivity_plus: ^6.1.4
+
+  # Immutable data classes
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # HTTP / config / storage
+  dio: ^5.8.0+1
+  flutter_dotenv: ^5.2.1
+  flutter_secure_storage: ^9.2.4
+  socket_io_client: ^3.1.2
+
+  # ML Kit / Camera
+  google_mlkit_pose_detection: ^0.14.1
+  google_mlkit_commons: ^0.11.1
+  camera: ^0.12.0+1
+
+  # Permissions
+  permission_handler: ^12.0.1
+
+  # UI
+  google_fonts: ^6.2.1
+  dropdown_search: ^7.0.0
+  flutter_calendar_carousel: ^2.4.2
+  carousel_slider: ^5.1.2
+
+  # Utilities
+  intl: ^0.19.0
+  flutter_tts: ^4.2.5
+  audioplayers: ^6.7.0
+  path_provider: ^2.1.5
+  image_picker: ^1.1.2
+  gap: ^3.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  image_path_android: "assets/images/fitnessco_logo.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/audio/
+    - assets/images/warmups/
+    - assets/images/gifs/
+    - assets/images/backgrounds/
+    - assets/images/icons/
+    - assets/images/fitnessco_logo.png
+    - assets/images/fitnessco_logo_notext.png
+    - assets/images/defaultProfile.png
+    - lib/core/seeds/muscles.json

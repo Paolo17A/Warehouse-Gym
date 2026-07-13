@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "581397883174",
+    "project_id": "fitnessco-a059f",
+    "storage_bucket": "fitnessco-a059f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581397883174:android:e20b8fb4b95fd06005f9e7",
+        "android_client_info": {
+          "package_name": "com.example.fitnessco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC59X8famegen38kGnyvfXwoQIw1ZZcqGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581397883174:android:033130d941bcc7cd05f9e7",
+        "android_client_info": {
+          "package_name": "com.example.fitnessco_v2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC59X8famegen38kGnyvfXwoQIw1ZZcqGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
