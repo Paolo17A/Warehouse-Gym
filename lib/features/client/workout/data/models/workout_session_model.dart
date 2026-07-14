@@ -33,9 +33,21 @@ class WorkoutSessionModel {
 
   Map<String, dynamic> toApi() {
     return {
-      'dateTime': dateTime.toUtc().toIso8601String(),
+      // Seconds-precision UTC ISO avoids Zod rejecting Dart's microsecond strings.
+      'dateTime': _toApiDateTime(dateTime),
       'exercises': _deepJsonMap(exercises),
     };
+  }
+
+  static String _toApiDateTime(DateTime value) {
+    final utc = value.toUtc();
+    final y = utc.year.toString().padLeft(4, '0');
+    final mo = utc.month.toString().padLeft(2, '0');
+    final d = utc.day.toString().padLeft(2, '0');
+    final h = utc.hour.toString().padLeft(2, '0');
+    final mi = utc.minute.toString().padLeft(2, '0');
+    final s = utc.second.toString().padLeft(2, '0');
+    return '$y-$mo-${d}T$h:$mi:${s}Z';
   }
 
   static Map<String, dynamic> _deepJsonMap(Map<dynamic, dynamic> source) {

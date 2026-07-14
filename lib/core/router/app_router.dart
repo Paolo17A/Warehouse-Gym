@@ -43,6 +43,7 @@ import '../../features/trainer/users/presentation/trainer_clients/pages/trainer_
 import '../../features/trainer/users/presentation/trainer_schedule/pages/trainer_schedule_page.dart';
 
 import '../providers/session_providers.dart';
+import '../../features/shared/auth/presentation/login/auth_redirect_resolver.dart';
 
 /// Central definition of all app route paths.
 class AppRouter {
@@ -164,10 +165,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (session.isBootstrapping) return null;
 
       final isLoggedIn = session.isAuthenticated;
-      final isPublic = AppRouter.publicRoutes.contains(state.matchedLocation);
+      final location = state.matchedLocation;
+      final isPublic = AppRouter.publicRoutes.contains(location);
 
       if (!isLoggedIn && !isPublic) return AppRouter.welcome;
-      if (isLoggedIn && state.matchedLocation == AppRouter.welcome) return null;
+
+      // Persist session across restarts: skip welcome/login when already authed.
+      if (isLoggedIn && isPublic) {
+        final user = session.currentUser;
+        if (user != null) return resolveAuthRedirect(user);
+      }
       return null;
     },
     routes: [

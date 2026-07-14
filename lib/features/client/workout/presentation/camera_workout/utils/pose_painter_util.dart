@@ -20,6 +20,9 @@ class PosePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+
     final linePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
@@ -119,6 +122,7 @@ class PosePainter extends CustomPainter {
       paintLine(
           PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle, linePaint);
     }
+    canvas.restore();
   }
 
   @override

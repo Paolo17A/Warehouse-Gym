@@ -7,8 +7,14 @@ class AuthSecureStorage {
 
   final FlutterSecureStorage _storage;
 
-  const AuthSecureStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+  AuthSecureStorage({FlutterSecureStorage? storage})
+      : _storage = storage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              iOptions: IOSOptions(
+                accessibility: KeychainAccessibility.first_unlock,
+              ),
+            );
 
   Future<String?> getToken() => _storage.read(key: _tokenKey);
 

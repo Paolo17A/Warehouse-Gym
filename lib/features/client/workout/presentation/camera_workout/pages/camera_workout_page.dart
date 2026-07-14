@@ -74,7 +74,6 @@ class CameraWorkoutPage extends HookConsumerWidget {
         goHome();
       },
       child: Scaffold(
-        extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Pose Estimation'),
           actions: [
@@ -99,35 +98,29 @@ class CameraWorkoutPage extends HookConsumerWidget {
                     onGoHome: goHome,
                   )
                 : AuthLoadingStack(
-            isLoading: workoutState.isLoading,
-            children: [
-              SimulationBackground(
-                child: SafeArea(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        if (workoutState.showsImagePhase && session != null)
-                          _imageDisplayContainer(
-                            session: session,
-                            phase: workoutState.phase,
-                            workoutVm: workoutVm,
-                          )
-                        else if (workoutState.showsWorkoutPhase &&
-                            session != null)
-                          _workoutContainer(
-                            context: context,
-                            session: session,
-                            cameraState: cameraState,
-                            cameraVm: cameraVm,
-                            workoutVm: workoutVm,
-                          ),
-                      ],
-                    ),
+                    isLoading: workoutState.isLoading,
+                    children: [
+                      SimulationBackground(
+                        scrollable: false,
+                        safeArea: true,
+                        child: workoutState.showsImagePhase && session != null
+                            ? _imageDisplayContainer(
+                                session: session,
+                                phase: workoutState.phase,
+                                workoutVm: workoutVm,
+                              )
+                            : workoutState.showsWorkoutPhase && session != null
+                                ? _workoutContainer(
+                                    context: context,
+                                    session: session,
+                                    cameraState: cameraState,
+                                    cameraVm: cameraVm,
+                                    workoutVm: workoutVm,
+                                  )
+                                : const SizedBox.expand(),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ],
-          ),
       ),
     );
   }
@@ -172,56 +165,30 @@ class CameraWorkoutPage extends HookConsumerWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: fitnesscoText(
-            session.spokenMessage,
-            textStyle: blackBoldStyle(size: isIntro ? 22 : 18),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Container(
-          height: isIntro ? 280 : 500,
-          width: isIntro ? double.infinity : 400,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(session.imageAssetPath),
-              fit: BoxFit.contain,
+        if (!isIntro)
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: fitnesscoText(
+              session.spokenMessage,
+              textStyle: blackBoldStyle(size: 18),
+              textAlign: TextAlign.center,
             ),
           ),
-        ),
-        if (isIntro && session.workoutDisplayText.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Padding(
+        Expanded(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              height: 140,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Scrollbar(
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      session.workoutDisplayText,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.4,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+            child: Image.asset(
+              session.imageAssetPath,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(Icons.fitness_center, size: 72),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+        ),
+        if (isIntro)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -240,11 +207,9 @@ class CameraWorkoutPage extends HookConsumerWidget {
               ),
             ),
           ),
-        ],
-        if (isReminder) ...[
-          const SizedBox(height: 24),
+        if (isReminder)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -263,9 +228,7 @@ class CameraWorkoutPage extends HookConsumerWidget {
               ),
             ),
           ),
-        ],
         if (phase == WorkoutStates.rest) ...[
-          const SizedBox(height: 12),
           fitnesscoText(
             session.spokenMessage,
             textStyle: blackBoldStyle(),
@@ -277,6 +240,7 @@ class CameraWorkoutPage extends HookConsumerWidget {
                 : '',
             textStyle: blackBoldStyle(size: 75),
           ),
+          const SizedBox(height: 16),
         ],
       ],
     );
@@ -291,34 +255,46 @@ class CameraWorkoutPage extends HookConsumerWidget {
   }) {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          height: 100,
-          color: Colors.black.withValues(alpha: 0.75),
-          child: Center(
-            child: Text(
-              cameraState.workoutInstruction,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        Expanded(
+          flex: 3,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _liveFeedBody(context, cameraState, cameraVm),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  color: Colors.black.withValues(alpha: 0.75),
+                  child: Text(
+                    cameraState.workoutInstruction,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
-        _liveFeedBody(context, cameraState, cameraVm),
-        Padding(
-          padding: const EdgeInsets.all(6),
-          child: Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.25,
-            decoration: const BoxDecoration(color: AppColors.jigglypuff),
+        Expanded(
+          flex: 1,
+          child: ColoredBox(
+            color: AppColors.jigglypuff,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -367,6 +343,7 @@ class CameraWorkoutPage extends HookConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -374,11 +351,11 @@ class CameraWorkoutPage extends HookConsumerWidget {
                       children: [
                         fitnesscoText(
                           '${session.currentRep} / ${session.repsQuota}',
-                          textStyle: greyBoldStyle(size: 40),
+                          textStyle: greyBoldStyle(size: 36),
                         ),
                         fitnesscoText(
                           'REPS',
-                          textStyle: greyBoldStyle(size: 25),
+                          textStyle: greyBoldStyle(size: 22),
                         ),
                       ],
                     ),
@@ -386,11 +363,11 @@ class CameraWorkoutPage extends HookConsumerWidget {
                       children: [
                         fitnesscoText(
                           '${session.currentSet} / ${session.setQuota}',
-                          textStyle: greyBoldStyle(size: 40),
+                          textStyle: greyBoldStyle(size: 36),
                         ),
                         fitnesscoText(
                           'SETS',
-                          textStyle: greyBoldStyle(size: 25),
+                          textStyle: greyBoldStyle(size: 22),
                         ),
                       ],
                     ),
@@ -409,26 +386,50 @@ class CameraWorkoutPage extends HookConsumerWidget {
     CameraWorkoutCameraState cameraState,
     CameraWorkoutCameraNotifier cameraVm,
   ) {
-    if (appCameras.isEmpty) return Container();
+    if (appCameras.isEmpty) return const SizedBox.expand();
     final controller = cameraVm.controller;
     if (controller == null || !cameraState.isInitialized) {
-      return Container();
+      return const SizedBox.expand();
     }
-    if (!controller.value.isInitialized) return Container();
+    if (!controller.value.isInitialized) return const SizedBox.expand();
 
-    return Container(
-      color: Colors.white,
-      height: MediaQuery.of(context).size.height * 0.6,
-      width: double.infinity,
-      child: cameraState.changingLens
-          ? const Center(child: Text('Changing camera lens'))
-          : Padding(
-              padding: const EdgeInsets.all(6),
+    if (cameraState.changingLens) {
+      return const Center(child: Text('Changing camera lens'));
+    }
+
+    final previewSize = controller.value.previewSize;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Cover the feed area so letterboxed black bars disappear.
+        final mediaAspect = constraints.maxWidth / constraints.maxHeight;
+        final previewAspect = previewSize == null
+            ? controller.value.aspectRatio
+            : previewSize.height / previewSize.width;
+
+        double width = constraints.maxWidth;
+        double height = constraints.maxHeight;
+        if (previewAspect > mediaAspect) {
+          width = height * previewAspect;
+        } else {
+          height = width / previewAspect;
+        }
+
+        return ClipRect(
+          child: OverflowBox(
+            maxWidth: width,
+            maxHeight: height,
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: width,
+              height: height,
               child: CameraPreview(
                 controller,
                 child: cameraState.customPaint,
               ),
             ),
+          ),
+        );
+      },
     );
   }
 

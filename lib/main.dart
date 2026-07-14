@@ -13,11 +13,22 @@ import 'core/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await dotenv.load(fileName: '.env');
+  await _loadEnv();
   configureDependencies();
   await sl<SessionService>().tryAutoLogin();
   appCameras = await availableCameras();
   runApp(const ProviderScope(child: WarehouseGymApp()));
+}
+
+Future<void> _loadEnv() async {
+  // Prefer assets/app.env — Android release asset bundles often skip ".env".
+  try {
+    await dotenv.load(fileName: 'assets/app.env');
+    return;
+  } catch (_) {
+    // Fall through to repo-root .env for local debug.
+  }
+  await dotenv.load(fileName: '.env');
 }
 
 class WarehouseGymApp extends ConsumerWidget {

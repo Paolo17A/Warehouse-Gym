@@ -147,9 +147,21 @@ class ClientHomePage extends HookConsumerWidget {
       appBar: homeAppBar(
         context,
         ref: ref,
-        title: fitnesscoText(
-          '$firstName $lastName',
-          textStyle: blackBoldStyle(),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/warehouse.png',
+              height: 36,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: fitnesscoText(
+                '$firstName $lastName',
+                textStyle: blackBoldStyle(),
+              ),
+            ),
+          ],
         ),
       ),
       body: SwitchedLoadingContainer(

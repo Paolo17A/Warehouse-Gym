@@ -13,6 +13,7 @@ Future<bool> confirmSkipWarmUp(BuildContext context) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
           child: const Text('Cancel'),
         ),
         FilledButton(

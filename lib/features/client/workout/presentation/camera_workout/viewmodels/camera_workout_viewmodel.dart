@@ -490,18 +490,24 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
   }
 
   Future<void> completeWorkoutSession() async {
+    if (_disposed || _resourcesReleased) return;
+
     var session = _requireSession();
     if (session.isAlreadyUpdating) return;
 
+    // Keep the autoDispose provider alive across the network call.
+    final keepAliveLink = _ref.keepAlive();
     final uid = _ref.read(sessionUserProvider)?.uid ?? '';
     session = session.copyWith(isAlreadyUpdating: true);
     state = CameraWorkoutState.submitting(session);
 
     try {
       if (session.accomplishedWorkouts.isEmpty) {
-        state = const CameraWorkoutState.failed(
-          'You skipped all your workouts. No history will be recorded.',
-        );
+        if (!_disposed) {
+          state = const CameraWorkoutState.failed(
+            'You skipped all your workouts. No history will be recorded.',
+          );
+        }
         return;
       }
 
@@ -512,6 +518,8 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
 
       final result =
           await _workoutUseCase.completeWorkout(uid, workoutSession);
+
+      if (_disposed || _resourcesReleased) return;
 
       result.fold(
         (failure) {
@@ -535,10 +543,9 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
         },
       );
     } catch (error) {
+      if (_disposed || _resourcesReleased) return;
       showErrorToast(
-        error is Exception
-            ? error.toString().replaceFirst('Exception: ', '')
-            : 'Error saving workout history.',
+        error.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
       );
       state = cameraWorkoutStateForPhase(
         WorkoutStates.done,
@@ -548,6 +555,8 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
           isAlreadyUpdating: false,
         ),
       );
+    } finally {
+      keepAliveLink.close();
     }
   }
 

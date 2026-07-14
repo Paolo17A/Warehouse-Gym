@@ -82,6 +82,7 @@ flutter:
 
   assets:
     - .env
+    - assets/app.env
     - assets/audio/
     - assets/images/warmups/
     - assets/images/gifs/

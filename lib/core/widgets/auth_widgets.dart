@@ -16,12 +16,11 @@ class AuthLoadingStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      fit: StackFit.expand,
       children: [
         ...children,
         if (isLoading)
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
+          ColoredBox(
             color: Colors.black.withValues(alpha: 0.5),
             child: const Center(child: CircularProgressIndicator()),
           ),

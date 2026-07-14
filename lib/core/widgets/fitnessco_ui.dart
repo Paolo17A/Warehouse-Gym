@@ -90,11 +90,17 @@ class _FullScreenBackground extends StatelessWidget {
     );
 
     if (!scrollable) {
-      return SizedBox.expand(
-        child: Container(
-          decoration: decoration,
-          child: safeArea ? SafeArea(child: child) : child,
-        ),
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              assetPath,
+              fit: BoxFit.cover,
+            ),
+          ),
+          safeArea ? SafeArea(child: child) : child,
+        ],
       );
     }
 
@@ -163,10 +169,18 @@ class StartWorkoutBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _FullScreenBackground(
-      assetPath: 'assets/images/backgrounds/start_workout_bg.png',
-      safeArea: true,
-      child: child,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/backgrounds/start_workout_bg.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
@@ -188,13 +202,22 @@ class ChatBackground extends StatelessWidget {
 
 class SimulationBackground extends StatelessWidget {
   final Widget child;
-  const SimulationBackground({super.key, required this.child});
+  final bool scrollable;
+  final bool safeArea;
+
+  const SimulationBackground({
+    super.key,
+    required this.child,
+    this.scrollable = true,
+    this.safeArea = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return _FullScreenBackground(
       assetPath: 'assets/images/backgrounds/SIMULATION Background.png',
-      safeArea: true,
+      safeArea: safeArea,
+      scrollable: scrollable,
       child: child,
     );
   }

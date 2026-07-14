@@ -59,12 +59,13 @@ class WorkoutService {
     String clientId,
     Map<String, dynamic> sessionData,
   ) {
-    return _client.postData<dynamic>(
+    return _client.postData<void>(
       '/client/workouts/history',
       body: {
         'dateTime': sessionData['dateTime'],
         'exercises': sessionData['exercises'],
       },
+      parser: (_) {},
     );
   }
 

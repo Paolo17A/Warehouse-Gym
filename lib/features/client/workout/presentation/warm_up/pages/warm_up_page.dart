@@ -47,17 +47,46 @@ class _WarmUpPageState extends State<WarmUpPage> {
   bool _isDoneWarmingUp = false;
   int _secondsRemaining = 30;
   Timer _timer = Timer(const Duration(seconds: 3), () {});
+  int _speechGeneration = 0;
+  Completer<void>? _speakCompleter;
 
   WarmUpStates get _currentState => _currentWarmUpState;
 
   @override
   void initState() {
     super.initState();
+    _configureTts();
     _setState(WarmUpStates.start);
+  }
+
+  Future<void> _configureTts() async {
+    await _flutterTts.setLanguage('en-US');
+    await _flutterTts.setPitch(1.0);
+    await _flutterTts.setSpeechRate(0.5);
+    await _flutterTts.awaitSpeakCompletion(true);
+    _flutterTts.setCompletionHandler(() {
+      final completer = _speakCompleter;
+      if (completer != null && !completer.isCompleted) {
+        completer.complete();
+      }
+    });
+    _flutterTts.setCancelHandler(() {
+      final completer = _speakCompleter;
+      if (completer != null && !completer.isCompleted) {
+        completer.complete();
+      }
+    });
+    _flutterTts.setErrorHandler((_) {
+      final completer = _speakCompleter;
+      if (completer != null && !completer.isCompleted) {
+        completer.complete();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _speechGeneration++;
     _flutterTts.stop();
     _timer.cancel();
     _audioPlayer.dispose();
@@ -65,6 +94,11 @@ class _WarmUpPageState extends State<WarmUpPage> {
   }
 
   Future<void> _stopAudio() async {
+    _speechGeneration++;
+    final completer = _speakCompleter;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
     await _audioPlayer.stop();
     await _flutterTts.stop();
   }
@@ -147,22 +181,59 @@ class _WarmUpPageState extends State<WarmUpPage> {
     }
     if (!mounted) return;
     setState(() => _currentWarmUpState = state);
-    _playMessage();
+    _speechGeneration++;
+    final generation = _speechGeneration;
+    unawaited(_playMessage(generation));
   }
 
-  Future<void> _playMessage() async {
-    if (_currentState == WarmUpStates.jogDone ||
-        _currentState == WarmUpStates.jumpingJackDone ||
-        _currentState == WarmUpStates.hipCirclesDone) {
-      await _audioPlayer.play(AssetSource('audio/ding.mp3'));
-    } else {
-      await _playback();
+  Future<void> _speak(String text, int generation) async {
+    if (text.trim().isEmpty) return;
+    if (generation != _speechGeneration || !mounted) return;
+
+    await _flutterTts.stop();
+    if (generation != _speechGeneration || !mounted) return;
+
+    _speakCompleter = Completer<void>();
+    final completer = _speakCompleter!;
+    // Extra buffer so short phrases don't hang forever if the OS skips
+    // the completion callback (common on Android for brief utterances).
+    final timeout = Duration(
+      milliseconds: (1200 + (text.trim().split(RegExp(r'\s+')).length * 450))
+          .clamp(1500, 30000),
+    );
+
+    try {
+      await _flutterTts.speak(text);
+      await completer.future.timeout(timeout);
+    } on TimeoutException {
+      if (!completer.isCompleted) completer.complete();
+    } catch (_) {
+      if (!completer.isCompleted) completer.complete();
     }
+  }
+
+  Future<void> _playMessage(int generation) async {
+    if (generation != _speechGeneration || !mounted) return;
+
+    final isDoneCue = _currentState == WarmUpStates.jogDone ||
+        _currentState == WarmUpStates.jumpingJackDone ||
+        _currentState == WarmUpStates.hipCirclesDone;
+
+    if (isDoneCue) {
+      await _audioPlayer.play(AssetSource('audio/ding.mp3'));
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (generation != _speechGeneration || !mounted) return;
+      _goToNextState();
+      return;
+    }
+
+    await _speak(spokenMessage, generation);
+    if (generation != _speechGeneration || !mounted) return;
 
     if (_currentState == WarmUpStates.jogCountdown ||
         _currentState == WarmUpStates.hipCirclesCountdown ||
         _currentState == WarmUpStates.jumpingJackCountdown) {
-      _initializeTimer(4);
+      await _runReadyCountdown(generation);
     } else if (_currentState == WarmUpStates.firstRest ||
         _currentState == WarmUpStates.secondRest) {
       _initializeTimer(10);
@@ -170,18 +241,34 @@ class _WarmUpPageState extends State<WarmUpPage> {
         _currentState == WarmUpStates.jumpingJackDuration ||
         _currentState == WarmUpStates.hipCirclesDuration ||
         _currentState == WarmUpStates.lastRest) {
-      await _flutterTts.speak(additionalExplanation);
+      await _speak(additionalExplanation, generation);
+      if (generation != _speechGeneration || !mounted) return;
       _initializeTimer(30);
     } else if (_currentState == WarmUpStates.jog ||
         _currentState == WarmUpStates.jumpingJack ||
         _currentState == WarmUpStates.hipCircles) {
-      await _flutterTts.speak(additionalExplanation);
-      await _flutterTts.awaitSpeakCompletion(true);
+      await _speak(additionalExplanation, generation);
+      if (generation != _speechGeneration || !mounted) return;
       _goToNextState();
     } else {
-      await Future.delayed(const Duration(seconds: 2));
       _goToNextState();
     }
+  }
+
+  /// 3 → 2 → 1 visual countdown after "Are you ready?".
+  /// Driven by delays (not TTS completion) so short speech can't freeze it.
+  Future<void> _runReadyCountdown(int generation) async {
+    _timer.cancel();
+    for (var n = 3; n >= 1; n--) {
+      if (generation != _speechGeneration || !mounted) return;
+      setState(() {
+        _secondsRemaining = n;
+        imageAssetPath = 'assets/images/warmups/countdown_$n.png';
+      });
+      await Future.delayed(const Duration(seconds: 1));
+    }
+    if (generation != _speechGeneration || !mounted) return;
+    _goToNextState();
   }
 
   void _goToNextState() {
@@ -225,13 +312,6 @@ class _WarmUpPageState extends State<WarmUpPage> {
     });
   }
 
-  Future<void> _playback() async {
-    await _flutterTts.setLanguage('en-US');
-    await _flutterTts.setPitch(1.0);
-    await _flutterTts.setSpeechRate(0.5);
-    await _flutterTts.speak(spokenMessage);
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -249,7 +329,7 @@ class _WarmUpPageState extends State<WarmUpPage> {
               onPressed: _onSkipWarmUp,
               child: fitnesscoText(
                 'Skip warm-up',
-                textStyle: whiteBoldStyle(size: 14),
+                textStyle: blackBoldStyle(size: 14),
               ),
             ),
           ],
