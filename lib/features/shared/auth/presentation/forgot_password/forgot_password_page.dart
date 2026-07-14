@@ -23,7 +23,11 @@ class ForgotPasswordPage extends HookConsumerWidget {
       }
       if (next is Success) {
         showSuccessToast('Password reset email sent.');
-        context.go(AppRouter.login);
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(AppRouter.login);
+        }
       }
     });
 
@@ -36,73 +40,73 @@ class ForgotPasswordPage extends HookConsumerWidget {
       ref.read(forgotPasswordViewModelProvider.notifier).forgotPassword(email);
     }
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SafeArea(
-          child: AuthLoadingStack(
-            isLoading: state.isSubmitting,
-            children: [
-              RegisterAuthBackground(
-                child: Stack(
-                  children: [
-                    Center(
-                      child: AuthRoundedCard(
-                        heightFactor: 0.8,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical:
-                                    MediaQuery.of(context).size.height * 0.2,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: Column(
-                                  children: [
-                                    fitnesscoText(
-                                      'RESET PASSWORD',
-                                      textStyle: blackBoldStyle(),
-                                    ),
-                                    const Gap(30),
-                                    fitnesscoFormTextField(
-                                      'ENTER EMAIL',
-                                      TextInputType.emailAddress,
-                                      emailController,
-                                      icon: Icons.email,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            AuthGradientButton(
-                              label: 'RESET PASSWORD',
-                              onTap: resetPassword,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Align(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(AppRouter.login);
+        }
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SafeArea(
+            child: AuthLoadingStack(
+              isLoading: state.isSubmitting,
+              children: [
+                RegisterAuthBackground(
+                  child: Center(
+                    child: Stack(
                       alignment: Alignment.topCenter,
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircleAvatar(
-                          radius: 80,
-                          backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(
-                            'assets/images/fitnessco_logo_notext.png',
+                      clipBehavior: Clip.none,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 45),
+                          child: AuthRoundedCard(
+                            heightFactor: 0.8,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 52),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      fitnesscoText(
+                                        'RESET PASSWORD',
+                                        textStyle: blackBoldStyle(),
+                                      ),
+                                      const Gap(30),
+                                      fitnesscoFormTextField(
+                                        'ENTER EMAIL',
+                                        TextInputType.emailAddress,
+                                        emailController,
+                                        icon: Icons.email,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                AuthGradientButton(
+                                  label: 'RESET PASSWORD',
+                                  onTap: resetPassword,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                        const SignUpLogoHeader(),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

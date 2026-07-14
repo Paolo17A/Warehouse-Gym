@@ -22,8 +22,7 @@ class SignInPage extends HookConsumerWidget {
       if (next is Failed && previous is! Failed) {
         showFailureToast(next.failure);
       }
-      if (next is Authenticated &&
-          previous is! Authenticated) {
+      if (next is Authenticated && previous is! Authenticated) {
         context.go(next.redirectPath);
         ref.read(signInViewModelProvider.notifier).clearRedirect();
       }
@@ -56,7 +55,7 @@ class SignInPage extends HookConsumerWidget {
                       child: Column(
                         children: [
                           FitnesscoTextField(
-                            text: 'Enter   Email Address',
+                            text: 'Enter Email Address',
                             controller: emailController,
                             textInputType: TextInputType.emailAddress,
                             displayPrefixIcon: const Icon(Icons.email_outlined),
@@ -80,14 +79,14 @@ class SignInPage extends HookConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () =>
-                                context.go(AppRouter.forgotPassword),
+                                context.push(AppRouter.forgotPassword),
                             child: Text(
                               'Forgot your password? ',
                               style: authBoldTextStyle(),
                             ),
                           ),
                           TextButton(
-                            onPressed: () => context.go(AppRouter.register),
+                            onPressed: () => context.push(AppRouter.register),
                             child: Text(
                               "Don't have an account? ",
                               style: authBoldTextStyle(),

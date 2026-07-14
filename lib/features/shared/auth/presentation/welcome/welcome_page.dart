@@ -25,7 +25,7 @@ class WelcomePage extends HookConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/fitnessco_logo.png'),
+                Image.asset('assets/images/warehouse.png'),
                 Container(
                   width: MediaQuery.of(context).size.width * 0.8,
                   decoration: BoxDecoration(
@@ -46,7 +46,7 @@ class WelcomePage extends HookConsumerWidget {
                         label: 'Create Your Account',
                         width: 250,
                         height: 70,
-                        onTap: () => context.go(AppRouter.register),
+                        onTap: () => context.push(AppRouter.register),
                       ),
                       const Gap(50),
                       fitnesscoText(
@@ -54,7 +54,7 @@ class WelcomePage extends HookConsumerWidget {
                         textStyle: blackBoldStyle(size: 18),
                       ),
                       TextButton(
-                        onPressed: () => context.go(AppRouter.login),
+                        onPressed: () => context.push(AppRouter.login),
                         child: const Text('Sign in Here'),
                       ),
                       const Gap(15),

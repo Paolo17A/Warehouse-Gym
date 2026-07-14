@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:the_warehouse_gym/core/constants/app_colors.dart';
 
 import 'coordinates_translator.dart';
 
@@ -19,20 +20,14 @@ class PosePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..color = Colors.green;
-
-    final leftPaint = Paint()
+    final linePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
-      ..color = Colors.yellow;
+      ..color = AppColors.nearMoon;
 
-    final rightPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..color = Colors.blueAccent;
+    final dotPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = AppColors.rosePink;
 
     for (final pose in poses) {
       pose.landmarks.forEach((_, landmark) {
@@ -53,8 +48,8 @@ class PosePainter extends CustomPainter {
                 cameraLensDirection,
               ),
             ),
-            1,
-            paint);
+            3,
+            dotPaint);
       });
 
       void paintLine(
@@ -96,32 +91,33 @@ class PosePainter extends CustomPainter {
       }
 
       //Draw arms
+      paintLine(PoseLandmarkType.leftShoulder, PoseLandmarkType.leftElbow,
+          linePaint);
       paintLine(
-          PoseLandmarkType.leftShoulder, PoseLandmarkType.leftElbow, leftPaint);
-      paintLine(
-          PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist, leftPaint);
+          PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist, linePaint);
       paintLine(PoseLandmarkType.rightShoulder, PoseLandmarkType.rightElbow,
-          rightPaint);
+          linePaint);
       paintLine(
-          PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist, rightPaint);
+          PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist, linePaint);
 
       //Draw Body
       paintLine(
-          PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip, leftPaint);
+          PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip, linePaint);
       paintLine(PoseLandmarkType.rightShoulder, PoseLandmarkType.rightHip,
-          rightPaint);
-      paintLine(
-          PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder, paint);
-      paintLine(PoseLandmarkType.leftHip, PoseLandmarkType.rightHip, paint);
+          linePaint);
+      paintLine(PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder,
+          linePaint);
+      paintLine(PoseLandmarkType.leftHip, PoseLandmarkType.rightHip, linePaint);
 
       //Draw legs
-      paintLine(PoseLandmarkType.leftHip, PoseLandmarkType.leftKnee, leftPaint);
       paintLine(
-          PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle, leftPaint);
+          PoseLandmarkType.leftHip, PoseLandmarkType.leftKnee, linePaint);
       paintLine(
-          PoseLandmarkType.rightHip, PoseLandmarkType.rightKnee, rightPaint);
+          PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle, linePaint);
       paintLine(
-          PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle, rightPaint);
+          PoseLandmarkType.rightHip, PoseLandmarkType.rightKnee, linePaint);
+      paintLine(
+          PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle, linePaint);
     }
   }
 

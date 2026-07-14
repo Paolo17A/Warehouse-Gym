@@ -52,7 +52,7 @@ class AppRouter {
   static const welcome = '/';
   static const login = '/login';
   static const register = '/register';
-  static const forgotPassword = '/forgot-password';
+  static const forgotPassword = '/login/forgot-password';
 
   static const publicRoutes = [welcome, login, register, forgotPassword];
 
@@ -179,14 +179,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRouter.login,
         builder: (_, __) => const SignInPage(),
+        routes: [
+          GoRoute(
+            path: 'forgot-password',
+            builder: (_, __) => const ForgotPasswordPage(),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRouter.register,
         builder: (_, __) => const SignUpPage(),
-      ),
-      GoRoute(
-        path: AppRouter.forgotPassword,
-        builder: (_, __) => const ForgotPasswordPage(),
       ),
       // ── Account ──────────────────────────────────────────────────────
       GoRoute(

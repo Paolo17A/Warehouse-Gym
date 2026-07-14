@@ -116,25 +116,29 @@ class SignInLogoHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Transform.scale(
         scale: 0.75,
-        child: Image.asset('assets/images/fitnessco_logo_notext.png'),
+        child: Image.asset('assets/images/warehouse.png'),
       ),
     );
   }
 }
 
-/// Circle logo overlay on the sign-up screen.
+/// Logo header on the sign-up screen.
 class SignUpLogoHeader extends StatelessWidget {
   const SignUpLogoHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(20),
-      child: CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.white,
-        backgroundImage: AssetImage(
-          'assets/images/fitnessco_logo_notext.png',
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: ColoredBox(
+        color: Colors.white,
+        child: SizedBox(
+          width: 200,
+          height: 90,
+          child: Image.asset(
+            'assets/images/warehouse.png',
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );

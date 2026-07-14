@@ -1,5 +1,4 @@
 import 'package:the_warehouse_gym/core/router/app_router.dart';
-import 'package:gap/gap.dart';
 import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/core/widgets/fitnessco_ui.dart';
 import 'package:the_warehouse_gym/features/shared/auth/presentation/register/sign_up_viewmodel.dart';
@@ -71,77 +70,88 @@ class SignUpPage extends HookConsumerWidget {
             isLoading: state.isSubmitting,
             children: [
               RegisterAuthBackground(
-                child: Stack(
-                  children: [
-                    Center(
-                      child: AuthRoundedCard(
-                        heightFactor: 0.8,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: FitnesscoTextField(
-                                text: 'Enter First Name',
-                                controller: firstNameController,
-                                textInputType: TextInputType.name,
-                                displayPrefixIcon:
-                                    const Icon(Icons.person_outline),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Padding(
+                        // Leave room so the stacked logo overlaps the card top.
+                        padding: const EdgeInsets.only(top: 45),
+                        child: AuthRoundedCard(
+                          heightFactor: 0.8,
+                          child: Column(
+                            children: [
+                              // Clear the overlapping logo before the first field.
+                              const SizedBox(height: 52),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: FitnesscoTextField(
+                                  text: 'Enter First Name',
+                                  controller: firstNameController,
+                                  textInputType: TextInputType.name,
+                                  displayPrefixIcon:
+                                      const Icon(Icons.person_outline),
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: FitnesscoTextField(
-                                text: 'Enter Last Name',
-                                controller: lastNameController,
-                                textInputType: TextInputType.name,
-                                displayPrefixIcon:
-                                    const Icon(Icons.person_outline),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: FitnesscoTextField(
+                                  text: 'Enter Last Name',
+                                  controller: lastNameController,
+                                  textInputType: TextInputType.name,
+                                  displayPrefixIcon:
+                                      const Icon(Icons.person_outline),
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: FitnesscoTextField(
-                                text: 'Enter Email Address',
-                                controller: emailController,
-                                textInputType: TextInputType.emailAddress,
-                                displayPrefixIcon: const Icon(Icons.email),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: FitnesscoTextField(
+                                  text: 'Enter Email Address',
+                                  controller: emailController,
+                                  textInputType: TextInputType.emailAddress,
+                                  displayPrefixIcon: const Icon(Icons.email),
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: FitnesscoTextField(
-                                text: 'Password',
-                                controller: passwordController,
-                                textInputType: TextInputType.visiblePassword,
-                                displayPrefixIcon:
-                                    const Icon(Icons.lock_outline),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: FitnesscoTextField(
+                                  text: 'Password',
+                                  controller: passwordController,
+                                  textInputType:
+                                      TextInputType.visiblePassword,
+                                  displayPrefixIcon:
+                                      const Icon(Icons.lock_outline),
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: FitnesscoTextField(
-                                text: 'Confirm Password',
-                                controller: confirmPasswordController,
-                                textInputType: TextInputType.visiblePassword,
-                                displayPrefixIcon:
-                                    const Icon(Icons.lock_outline),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: FitnesscoTextField(
+                                  text: 'Confirm Password',
+                                  controller: confirmPasswordController,
+                                  textInputType:
+                                      TextInputType.visiblePassword,
+                                  displayPrefixIcon:
+                                      const Icon(Icons.lock_outline),
+                                ),
                               ),
-                            ),
-                            const Gap(40),
-                            AuthGradientButton(
-                              label: 'REGISTER',
-                              onTap: submit,
-                            ),
-                          ],
+                              const Spacer(),
+                              AuthGradientButton(
+                                label: 'REGISTER',
+                                onTap: submit,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const Align(
-                      alignment: Alignment.topCenter,
-                      child: SignUpLogoHeader(),
-                    ),
-                  ],
+                      const SignUpLogoHeader(),
+                    ],
+                  ),
                 ),
               ),
             ],

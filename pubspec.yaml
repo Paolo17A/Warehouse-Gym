@@ -74,7 +74,7 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  image_path_android: "assets/images/fitnessco_logo.png"
+  image_path_android: "assets/images/warehouse.png"
   min_sdk_android: 21
 
 flutter:
@@ -89,5 +89,6 @@ flutter:
     - assets/images/icons/
     - assets/images/fitnessco_logo.png
     - assets/images/fitnessco_logo_notext.png
+    - assets/images/warehouse.png
     - assets/images/defaultProfile.png
     - lib/core/seeds/muscles.json
