@@ -24,8 +24,13 @@ class WorkoutPlanMapper {
     };
   }
 
+  /// Compares calendar dates in the device's local timezone.
+  /// API timestamps are UTC ISO strings; comparing raw UTC day components
+  /// against [DateTime.now] misses "today" near midnight / across zones.
   static bool isSameCalendarDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+    final la = a.toLocal();
+    final lb = b.toLocal();
+    return la.year == lb.year && la.month == lb.month && la.day == lb.day;
   }
 
   static WorkoutPrescription? findTodaysPrescription(

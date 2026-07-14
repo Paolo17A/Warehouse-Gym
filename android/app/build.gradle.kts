@@ -25,6 +25,8 @@ android {
         release {
             // Local/dev signing — replace with a real keystore before Play Store.
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

@@ -11,8 +11,17 @@ class WorkoutService {
       _session.currentUser?.accountType.toUpperCase() == 'TRAINER';
 
   Future<List<Map<String, dynamic>>> getPrescribedWorkouts(String clientId) async {
-    final list = await _client.getData<List<dynamic>>('/client/workouts/prescribed');
-    return list.cast<Map<String, dynamic>>();
+    final list = await _client.getData<List<dynamic>>(
+      '/client/workouts/prescribed',
+      parser: (data) {
+        if (data is! List) return <dynamic>[];
+        return data;
+      },
+    );
+    return list
+        .whereType<Map>()
+        .map((entry) => Map<String, dynamic>.from(entry))
+        .toList();
   }
 
   Future<Map<String, dynamic>?> getPrescriptionById(String prescriptionId) async {
@@ -70,8 +79,17 @@ class WorkoutService {
   }
 
   Future<List<Map<String, dynamic>>> getWorkoutHistory(String clientId) async {
-    final list = await _client.getData<List<dynamic>>('/client/workouts/history');
-    return list.cast<Map<String, dynamic>>();
+    final list = await _client.getData<List<dynamic>>(
+      '/client/workouts/history',
+      parser: (data) {
+        if (data is! List) return <dynamic>[];
+        return data;
+      },
+    );
+    return list
+        .whereType<Map>()
+        .map((entry) => Map<String, dynamic>.from(entry))
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getTrainerSchedule(String trainerId) async {

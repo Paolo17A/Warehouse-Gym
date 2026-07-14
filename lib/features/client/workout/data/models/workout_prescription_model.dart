@@ -25,24 +25,25 @@ class WorkoutPrescriptionModel {
     String id,
     Map<String, dynamic> data,
   ) {
-    final rawWorkout = data['workout'] as Map<String, dynamic>? ?? {};
+    final rawWorkout = _asStringKeyedMap(data['workout']) ?? {};
 
     final exercises = <String, List<ExercisePrescription>>{};
     rawWorkout.forEach((muscle, exercisesMap) {
-      if (exercisesMap is Map<String, dynamic>) {
-        final list = <ExercisePrescription>[];
-        exercisesMap.forEach((exerciseName, details) {
-          if (details is Map<String, dynamic>) {
-            list.add(ExercisePrescription(
-              exerciseName: exerciseName,
-              muscle: muscle,
-              sets: (details['sets'] as num?)?.toInt() ?? 0,
-              reps: (details['reps'] as num?)?.toInt() ?? 0,
-            ));
-          }
-        });
-        exercises[muscle] = list;
-      }
+      final detailsMap = _asStringKeyedMap(exercisesMap);
+      if (detailsMap == null) return;
+
+      final list = <ExercisePrescription>[];
+      detailsMap.forEach((exerciseName, details) {
+        final detailMap = _asStringKeyedMap(details);
+        if (detailMap == null) return;
+        list.add(ExercisePrescription(
+          exerciseName: exerciseName,
+          muscle: muscle,
+          sets: (detailMap['sets'] as num?)?.toInt() ?? 0,
+          reps: (detailMap['reps'] as num?)?.toInt() ?? 0,
+        ));
+      });
+      exercises[muscle] = list;
     });
 
     final rawDate = data['workoutDate'];
@@ -64,6 +65,15 @@ class WorkoutPrescriptionModel {
       workoutDate: workoutDate,
       exercises: exercises,
     );
+  }
+
+  static Map<String, dynamic>? _asStringKeyedMap(dynamic value) {
+    if (value == null) return null;
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, item) => MapEntry(key.toString(), item));
+    }
+    return null;
   }
 
   WorkoutPrescription toEntity() {

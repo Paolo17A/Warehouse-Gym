@@ -170,45 +170,53 @@ class CameraWorkoutCameraNotifier
     }
 
     _isBusy = true;
-    final exercise = _ref
-        .read(cameraWorkoutProvider.notifier)
-        .currentExerciseName(session);
-    final instruction =
-        workoutInstructionFor(exercise, session.mayAddRep);
+    try {
+      final exercise = _ref
+          .read(cameraWorkoutProvider.notifier)
+          .currentExerciseName(session);
+      final instruction =
+          workoutInstructionFor(exercise, session.mayAddRep);
 
-    if (state.workoutInstruction != instruction) {
-      state = state.copyWith(workoutInstruction: instruction);
-    }
+      if (state.workoutInstruction != instruction) {
+        state = state.copyWith(workoutInstruction: instruction);
+      }
 
-    final poses = await _poseDetector.processImage(inputImage);
-    if (_disposed) return;
+      final poses = await _poseDetector.processImage(inputImage);
+      if (_disposed) return;
 
-    CustomPaint? overlay;
-    if (inputImage.metadata != null) {
-      overlay = CustomPaint(
-        painter: PosePainter(
-          poses,
-          inputImage.metadata!.size,
-          inputImage.metadata!.rotation,
-          _cameraLensDirection,
-        ),
+      CustomPaint? overlay;
+      if (inputImage.metadata != null) {
+        overlay = CustomPaint(
+          painter: PosePainter(
+            poses,
+            inputImage.metadata!.size,
+            inputImage.metadata!.rotation,
+            _cameraLensDirection,
+          ),
+        );
+      }
+
+      final viewModel = _ref.read(cameraWorkoutProvider.notifier);
+      final currentMayAddRep =
+          _ref.read(cameraWorkoutProvider).session?.mayAddRep ?? true;
+
+      processPosesForExercise(
+        exercise: exercise,
+        poses: poses,
+        mayAddRep: currentMayAddRep,
+        onRepDetected: viewModel.addRepFromPose,
+        onMayAddRepChanged: viewModel.setMayAddRep,
       );
+
+      if (!_disposed) {
+        state = state.copyWith(customPaint: overlay);
+      }
+    } catch (_) {
+      // Keep the live feed running if a single ML Kit frame fails (common in
+      // release when models/classes are briefly unavailable).
+    } finally {
+      _isBusy = false;
     }
-
-    final viewModel = _ref.read(cameraWorkoutProvider.notifier);
-    final currentMayAddRep =
-        _ref.read(cameraWorkoutProvider).session?.mayAddRep ?? true;
-
-    processPosesForExercise(
-      exercise: exercise,
-      poses: poses,
-      mayAddRep: currentMayAddRep,
-      onRepDetected: viewModel.addRepFromPose,
-      onMayAddRepChanged: viewModel.setMayAddRep,
-    );
-
-    state = state.copyWith(customPaint: overlay);
-    _isBusy = false;
   }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {

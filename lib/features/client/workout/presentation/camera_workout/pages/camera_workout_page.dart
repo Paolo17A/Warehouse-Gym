@@ -75,7 +75,6 @@ class CameraWorkoutPage extends HookConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Pose Estimation'),
           actions: [
             IconButton(
               onPressed: cameraVm.switchCamera,
@@ -422,9 +421,13 @@ class CameraWorkoutPage extends HookConsumerWidget {
             child: SizedBox(
               width: width,
               height: height,
-              child: CameraPreview(
-                controller,
-                child: cameraState.customPaint,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CameraPreview(controller),
+                  if (cameraState.customPaint != null)
+                    Positioned.fill(child: cameraState.customPaint!),
+                ],
               ),
             ),
           ),
