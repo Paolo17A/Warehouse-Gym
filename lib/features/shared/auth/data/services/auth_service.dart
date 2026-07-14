@@ -52,8 +52,11 @@ class AuthService {
   }
 
   AuthResult _parseAuthResult(Map<String, dynamic> data) {
-    final token = data['token'] as String? ?? '';
-    final userJson = data['user'] as Map<String, dynamic>? ?? {};
+    final token = data['token']?.toString() ?? '';
+    final userRaw = data['user'];
+    final userJson = userRaw is Map
+        ? Map<String, dynamic>.from(userRaw)
+        : <String, dynamic>{};
     return AuthResult(token: token, user: UserModel.fromJson(userJson));
   }
 }

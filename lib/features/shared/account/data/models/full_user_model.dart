@@ -30,20 +30,25 @@ class FullUserModel {
   });
 
   factory FullUserModel.fromJson(Map<String, dynamic> data) {
-    final uid = data['uid'] as String? ?? data['id'] as String? ?? '';
+    final uid = data['uid']?.toString() ?? data['id']?.toString() ?? '';
     return FullUserModel(
       uid: uid,
-      email: data['email'] as String? ?? '',
-      accountType: data['accountType'] as String? ?? 'CLIENT',
-      profileImageURL: data['profileImageURL'] as String? ?? '',
-      password: data['password'] as String? ?? '',
-      rootData: data,
-      profileDetails: data['profileDetails'] as Map<String, dynamic>?,
-      trainerProfileData: data['trainerProfile'] as Map<String, dynamic>?,
-      trainerRelationshipData:
-          data['trainerRelationship'] as Map<String, dynamic>?,
+      email: data['email']?.toString() ?? '',
+      accountType: data['accountType']?.toString() ?? 'CLIENT',
+      profileImageURL: data['profileImageURL']?.toString() ?? '',
+      password: data['password']?.toString() ?? '',
+      rootData: Map<String, dynamic>.from(data),
+      profileDetails: _asMap(data['profileDetails']),
+      trainerProfileData: _asMap(data['trainerProfile']),
+      trainerRelationshipData: _asMap(data['trainerRelationship']),
       bmiHistory: data['bmiHistory'] is List ? data['bmiHistory'] as List : [],
     );
+  }
+
+  static Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
   }
 
   factory FullUserModel.fromFirestore(dynamic doc) {

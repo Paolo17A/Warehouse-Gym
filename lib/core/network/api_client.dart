@@ -25,7 +25,7 @@ class ApiClient {
         _dio = dio ??
             Dio(
               BaseOptions(
-                baseUrl: '${config.apiBaseUrl}/api',
+                baseUrl: _normalizeApiBaseUrl(config.apiBaseUrl),
                 connectTimeout: const Duration(seconds: 30),
                 receiveTimeout: const Duration(seconds: 30),
                 headers: {'Content-Type': 'application/json'},
@@ -44,6 +44,16 @@ class ApiClient {
     );
   }
 
+  /// Accepts either `https://host` or `https://host/api`.
+  static String _normalizeApiBaseUrl(String raw) {
+    var base = raw.trim();
+    while (base.endsWith('/')) {
+      base = base.substring(0, base.length - 1);
+    }
+    if (base.endsWith('/api')) return base;
+    return '$base/api';
+  }
+
   Dio get dio => _dio;
 
   Future<T> getData<T>(
@@ -51,7 +61,8 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? parser,
   }) async {
-    final response = await _request(() => _dio.get(path, queryParameters: queryParameters));
+    final response =
+        await _request(() => _dio.get(path, queryParameters: queryParameters));
     return _parseData(response, parser);
   }
 
@@ -111,34 +122,48 @@ class ApiClient {
   }
 
   T _parseData<T>(Response<dynamic> response, T Function(dynamic json)? parser) {
-    final body = response.data;
-    if (body is! Map<String, dynamic>) {
+    final bodyMap = _asStringKeyedMap(response.data);
+    if (bodyMap == null) {
       throw const ApiException('Invalid response format.');
     }
 
-    final success = body['success'] as bool? ?? false;
+    final success = bodyMap['success'] == true;
     if (!success) {
-      final message = body['message'] as String? ?? 'Request failed.';
+      final message = bodyMap['message']?.toString() ?? 'Request failed.';
       throw ApiException(message, statusCode: response.statusCode);
     }
 
-    final data = body['data'];
+    final data = bodyMap['data'];
     if (parser != null) return parser(data);
+
+    if (data is Map) {
+      return Map<String, dynamic>.from(data) as T;
+    }
     return data as T;
   }
 
   ApiException _mapDioError(DioException e) {
     final response = e.response;
-    if (response?.data is Map<String, dynamic>) {
-      final data = response!.data as Map<String, dynamic>;
-      final message = data['message'] as String? ?? e.message ?? 'Request failed.';
-      return ApiException(message, statusCode: response.statusCode);
+    final bodyMap = _asStringKeyedMap(response?.data);
+    if (bodyMap != null) {
+      final message =
+          bodyMap['message']?.toString() ?? e.message ?? 'Request failed.';
+      return ApiException(message, statusCode: response?.statusCode);
     }
     if (e.type == DioExceptionType.connectionError ||
         e.type == DioExceptionType.connectionTimeout) {
       return const ApiException('Unable to reach the server.');
     }
-    return ApiException(e.message ?? 'Request failed.', statusCode: response?.statusCode);
+    return ApiException(
+      e.message ?? 'Request failed.',
+      statusCode: response?.statusCode,
+    );
+  }
+
+  static Map<String, dynamic>? _asStringKeyedMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
   }
 }
 

@@ -16,13 +16,16 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final uid = json['uid'] as String? ?? json['id'] as String? ?? '';
+    final uid = json['uid']?.toString() ?? json['id']?.toString() ?? '';
+    final initialized = json['accountInitialized'];
     return UserModel(
       uid: uid,
-      email: json['email'] as String? ?? '',
-      accountType: (json['accountType'] as String? ?? 'CLIENT').toUpperCase(),
-      accountInitialized: json['accountInitialized'] as bool? ?? false,
-      profileImageURL: json['profileImageURL'] as String? ?? '',
+      email: json['email']?.toString() ?? '',
+      accountType: (json['accountType']?.toString() ?? 'CLIENT').toUpperCase(),
+      accountInitialized: initialized == true ||
+          initialized == 1 ||
+          initialized?.toString().toLowerCase() == 'true',
+      profileImageURL: json['profileImageURL']?.toString() ?? '',
     );
   }
 

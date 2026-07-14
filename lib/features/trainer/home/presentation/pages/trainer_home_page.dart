@@ -42,8 +42,6 @@ class TrainerHomePage extends HookConsumerWidget {
 
     final fullUser = homeState.user;
     final trainerProfile = fullUser?.trainerProfile;
-    final trainerRel = fullUser?.trainerRelationship;
-    final clientCount = trainerRel?.currentClients.length ?? 0;
     final certifications = trainerProfile?.certifications ?? [];
     final interests = trainerProfile?.interests ?? [];
     final specialties = trainerProfile?.specialty ?? [];

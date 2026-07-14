@@ -55,9 +55,10 @@ class ProfileService {
 
   Map<String, dynamic>? _findInDynamicList(List<dynamic> list, String uid) {
     for (final item in list) {
-      if (item is! Map<String, dynamic>) continue;
-      final itemUid = item['uid'] as String? ?? item['id'] as String? ?? '';
-      if (itemUid == uid) return item;
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      final itemUid = map['uid']?.toString() ?? map['id']?.toString() ?? '';
+      if (itemUid == uid) return map;
     }
     return null;
   }
