@@ -71,24 +71,37 @@ class _FullScreenBackground extends StatelessWidget {
   final String assetPath;
   final Widget child;
   final bool safeArea;
+  final bool scrollable;
 
   const _FullScreenBackground({
     required this.assetPath,
     required this.child,
     this.safeArea = false,
+    this.scrollable = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final decoration = BoxDecoration(
+      image: DecorationImage(
+        image: AssetImage(assetPath),
+        fit: BoxFit.cover,
+      ),
+    );
+
+    if (!scrollable) {
+      return SizedBox.expand(
+        child: Container(
+          decoration: decoration,
+          child: safeArea ? SafeArea(child: child) : child,
+        ),
+      );
+    }
+
     final content = Container(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage(assetPath),
-          fit: BoxFit.cover,
-        ),
-      ),
+      decoration: decoration,
       child: child,
     );
     return SingleChildScrollView(
@@ -104,7 +117,7 @@ class HomeBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _FullScreenBackground(
-      assetPath: 'assets/images/backgrounds/main client dashboard.png',
+      assetPath: 'assets/images/backgrounds/register.png',
       child: child,
     );
   }
@@ -167,6 +180,7 @@ class ChatBackground extends StatelessWidget {
     return _FullScreenBackground(
       assetPath: 'assets/images/backgrounds/CHAT BACKGROUND.png',
       safeArea: true,
+      scrollable: false,
       child: child,
     );
   }
@@ -201,9 +215,8 @@ Widget roundedContainer({
     decoration: BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(20),
-      border: borderColor != null
-          ? Border.all(color: borderColor, width: 1)
-          : null,
+      border:
+          borderColor != null ? Border.all(color: borderColor, width: 1) : null,
     ),
     child: child,
   );
@@ -280,10 +293,12 @@ void _showLogOutModal(BuildContext context, WidgetRef ref) {
               ),
             ),
           ),
-          onTap: () {
+          onTap: () async {
             Navigator.pop(ctx);
-            ref.read(sessionServiceProvider).signOut();
-            context.go(AppRouter.welcome);
+            await ref.read(sessionServiceProvider).signOut();
+            if (context.mounted) {
+              context.go(AppRouter.welcome);
+            }
           },
         ),
       ],

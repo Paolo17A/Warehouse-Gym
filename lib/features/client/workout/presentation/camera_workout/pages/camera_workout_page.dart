@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:the_warehouse_gym/core/constants/app_colors.dart';
 import 'package:the_warehouse_gym/core/providers/camera_providers.dart';
+import 'package:the_warehouse_gym/core/providers/session_providers.dart';
 import 'package:the_warehouse_gym/core/router/app_router.dart';
 import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/core/widgets/fitnessco_ui.dart';
@@ -44,23 +45,25 @@ class CameraWorkoutPage extends HookConsumerWidget {
       return () => releaseCameraWorkoutResources(ref);
     }, const []);
 
+    void goHome() {
+      releaseCameraWorkoutResources(ref);
+      bumpClientHomeRefresh(ref);
+      if (context.mounted) context.go(AppRouter.clientHome);
+    }
+
     ref.listen(cameraWorkoutProvider, (previous, next) {
       final failure = next.failureMessage;
       if (failure != null && failure.isNotEmpty) {
         if (failure.contains('No exercises') ||
             failure.contains('No history will be recorded')) {
           showInfoToast(failure);
-          if (context.mounted) {
-            releaseCameraWorkoutResources(ref);
-            context.go(AppRouter.clientHome);
-          }
+          if (context.mounted) goHome();
         }
       }
 
       final nextSession = next.session;
       if (nextSession?.navigateHome == true && context.mounted) {
-        releaseCameraWorkoutResources(ref);
-        context.go(AppRouter.clientHome);
+        goHome();
       }
     });
 
@@ -68,8 +71,7 @@ class CameraWorkoutPage extends HookConsumerWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        releaseCameraWorkoutResources(ref);
-        if (context.mounted) context.go(AppRouter.clientHome);
+        goHome();
       },
       child: Scaffold(
         extendBodyBehindAppBar: true,
@@ -88,19 +90,13 @@ class CameraWorkoutPage extends HookConsumerWidget {
                 message: 'Camera permission is required for pose detection.',
                 showRetry: true,
                 onRetry: cameraVm.retryPermission,
-                onGoHome: () {
-                  releaseCameraWorkoutResources(ref);
-                  context.go(AppRouter.clientHome);
-                },
+                onGoHome: goHome,
               )
             : cameraState.unavailable
                 ? _cameraErrorView(
                     context,
                     message: 'No camera found on this device.',
-                    onGoHome: () {
-                      releaseCameraWorkoutResources(ref);
-                      context.go(AppRouter.clientHome);
-                    },
+                    onGoHome: goHome,
                   )
                 : AuthLoadingStack(
             isLoading: workoutState.isLoading,

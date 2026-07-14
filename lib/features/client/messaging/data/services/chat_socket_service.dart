@@ -16,6 +16,7 @@ class ChatSocketService {
   io.Socket? _socket;
   String? _connectedToken;
   String? _threadId;
+  Completer<void>? _joinCompleter;
   final _messagesController = StreamController<List<MessageModel>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
   List<MessageModel> _messages = [];
@@ -25,6 +26,8 @@ class ChatSocketService {
   Stream<List<MessageModel>> get messageStream => _messagesController.stream;
 
   Stream<String> get errorStream => _errorController.stream;
+
+  List<MessageModel> get currentMessages => List.unmodifiable(_messages);
 
   Future<void> connect(String? token) async {
     if (token == null || token.isEmpty) {
@@ -52,7 +55,9 @@ class ChatSocketService {
 
     final completer = Completer<void>();
     _socket!
-      ..onConnect((_) => completer.complete())
+      ..onConnect((_) {
+        if (!completer.isCompleted) completer.complete();
+      })
       ..onConnectError((error) {
         if (!completer.isCompleted) {
           completer.completeError(error ?? 'Socket connect failed');
@@ -67,7 +72,10 @@ class ChatSocketService {
   Future<void> disconnect() async {
     _threadId = null;
     _messages = [];
-    _messagesController.add(const []);
+    _joinCompleter = null;
+    if (!_messagesController.isClosed) {
+      _messagesController.add(const []);
+    }
     final socket = _socket;
     _socket = null;
     _connectedToken = null;
@@ -76,19 +84,17 @@ class ChatSocketService {
     }
   }
 
-  Future<void> joinChat(String otherUserId) async {
+  /// Joins a thread and returns the loaded history (newest first).
+  Future<List<MessageModel>> joinChat(String otherUserId) async {
     final socket = _socket;
     if (socket == null || !socket.connected) {
       throw StateError('Socket is not connected.');
     }
-    final completer = Completer<void>();
-    void handler(dynamic data) {
-      if (!completer.isCompleted) completer.complete();
-    }
 
-    socket.once(joinedEvent, handler);
+    _joinCompleter = Completer<void>();
     socket.emit(joinEvent, {'otherUserId': otherUserId});
-    await completer.future.timeout(const Duration(seconds: 15));
+    await _joinCompleter!.future.timeout(const Duration(seconds: 15));
+    return currentMessages;
   }
 
   Future<void> leaveChat() async {
@@ -111,7 +117,10 @@ class ChatSocketService {
   }
 
   void _onJoined(dynamic data) {
-    if (data is! Map) return;
+    if (data is! Map) {
+      _failJoin('Invalid chat:joined payload');
+      return;
+    }
     final map = Map<String, dynamic>.from(data);
     _threadId = map['threadId'] as String?;
     final rawMessages = map['messages'] as List<dynamic>? ?? [];
@@ -120,7 +129,25 @@ class ChatSocketService {
         .map((m) => MessageModel.fromSocketJson(Map<String, dynamic>.from(m)))
         .toList()
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    _messagesController.add(List.unmodifiable(_messages));
+    if (!_messagesController.isClosed) {
+      _messagesController.add(List.unmodifiable(_messages));
+    }
+    final joinCompleter = _joinCompleter;
+    _joinCompleter = null;
+    if (joinCompleter != null && !joinCompleter.isCompleted) {
+      joinCompleter.complete();
+    }
+  }
+
+  void _failJoin(String message) {
+    final joinCompleter = _joinCompleter;
+    _joinCompleter = null;
+    if (joinCompleter != null && !joinCompleter.isCompleted) {
+      joinCompleter.completeError(message);
+    }
+    if (!_errorController.isClosed) {
+      _errorController.add(message);
+    }
   }
 
   void _onMessage(dynamic data) {
@@ -131,13 +158,22 @@ class ChatSocketService {
     final message =
         MessageModel.fromSocketJson(Map<String, dynamic>.from(messageJson));
     _messages = [message, ..._messages];
-    _messagesController.add(List.unmodifiable(_messages));
+    if (!_messagesController.isClosed) {
+      _messagesController.add(List.unmodifiable(_messages));
+    }
   }
 
   void _onError(dynamic data) {
     if (data is Map) {
       final message = data['message'] as String? ?? 'Chat error';
-      _errorController.add(message);
+      if (!_errorController.isClosed) {
+        _errorController.add(message);
+      }
+      final joinCompleter = _joinCompleter;
+      _joinCompleter = null;
+      if (joinCompleter != null && !joinCompleter.isCompleted) {
+        joinCompleter.completeError(message);
+      }
     }
   }
 

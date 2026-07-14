@@ -516,9 +516,14 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
       result.fold(
         (failure) {
           showFailureToast(failure);
+          // Still finish the session so the client can start another one.
           state = cameraWorkoutStateForPhase(
             WorkoutStates.done,
-            session.copyWith(isAlreadyUpdating: false),
+            session.copyWith(
+              workoutSaved: false,
+              navigateHome: true,
+              isAlreadyUpdating: false,
+            ),
           );
         },
         (_) {
@@ -529,11 +534,19 @@ class CameraWorkoutViewModel extends StateNotifier<CameraWorkoutState> {
           );
         },
       );
-    } catch (_) {
-      showErrorToast('Error saving workout history.');
+    } catch (error) {
+      showErrorToast(
+        error is Exception
+            ? error.toString().replaceFirst('Exception: ', '')
+            : 'Error saving workout history.',
+      );
       state = cameraWorkoutStateForPhase(
         WorkoutStates.done,
-        session.copyWith(isAlreadyUpdating: false),
+        session.copyWith(
+          workoutSaved: false,
+          navigateHome: true,
+          isAlreadyUpdating: false,
+        ),
       );
     }
   }

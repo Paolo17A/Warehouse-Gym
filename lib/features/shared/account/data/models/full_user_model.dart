@@ -95,6 +95,10 @@ class FullUserModel {
 
   static String _stringValue(dynamic value) {
     if (value == null) return '';
+    if (value is Map) {
+      final id = value['uid'] ?? value['id'] ?? value['_id'] ?? value['\$oid'];
+      if (id != null) return id.toString();
+    }
     return value.toString();
   }
 
@@ -110,6 +114,16 @@ class FullUserModel {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
+  }
+
+  static bool _boolValue(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1' || normalized == 'yes';
+    }
+    return false;
   }
 
   static List<String> _stringList(dynamic value) {
@@ -141,7 +155,7 @@ class FullUserModel {
       muscleGoal: _stringValue(data['muscleGoal']),
       dedicationSpan: _stringValue(data['dedicationSpan']),
       specialPlans: _stringValue(data['specialPlans']),
-      recentlyDoctored: data['recentlyDoctored'] as bool? ?? false,
+      recentlyDoctored: _boolValue(data['recentlyDoctored']),
     );
   }
 
@@ -170,7 +184,7 @@ class FullUserModel {
 
     return TrainerRelationship(
       currentTrainer: _stringValue(pick('currentTrainer')),
-      isConfirmed: pick('isConfirmed') as bool? ?? false,
+      isConfirmed: _boolValue(pick('isConfirmed')),
       currentClients: _stringList(pick('currentClients')),
     );
   }

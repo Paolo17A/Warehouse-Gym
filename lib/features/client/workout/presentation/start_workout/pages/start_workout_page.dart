@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:the_warehouse_gym/core/constants/app_colors.dart';
 import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/core/widgets/fitnessco_ui.dart';
@@ -80,7 +81,7 @@ class StartWorkoutPage extends HookConsumerWidget {
                 ),
                 if (workouts.isNotEmpty)
                   roundedContainer(
-                    height: 170,
+                    height: 200,
                     color: const Color.fromARGB(255, 209, 209, 209),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
@@ -89,32 +90,44 @@ class StartWorkoutPage extends HookConsumerWidget {
                         itemBuilder: (context, index, _) {
                           return roundedContainer(
                             color: Colors.white,
-                            width: MediaQuery.of(context).size.width * 0.3,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                fitnesscoText(
-                                  workouts[index],
-                                  textStyle: blackBoldStyle(),
-                                ),
-                                Container(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.12,
-                                  width: 75,
-                                  color: Colors.white,
-                                  child: Image.asset(
-                                    'assets/images/gifs/${workouts[index]}.gif',
-                                    errorBuilder: (_, __, ___) =>
-                                        const Icon(Icons.fitness_center),
+                            width: MediaQuery.of(context).size.width * 0.42,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 40,
+                                    width: double.infinity,
+                                    child: Text(
+                                      workouts[index],
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.nunitoSans(
+                                        textStyle: blackBoldStyle(size: 13),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 4),
+                                  Expanded(
+                                    child: Image.asset(
+                                      'assets/images/gifs/${workouts[index]}.gif',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.fitness_center),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
                         options: CarouselOptions(
-                          height: MediaQuery.of(context).size.height * 0.35,
-                          viewportFraction: 0.5,
+                          height: 180,
+                          viewportFraction: 0.55,
                           enableInfiniteScroll: false,
                         ),
                       ),

@@ -23,7 +23,8 @@ class BmiService {
         'bmiValue': bmiValue,
         'heightCm': heightCm,
         'weightKg': weightKg,
-        if (recordedAt != null) 'recordedAt': recordedAt.toIso8601String(),
+        if (recordedAt != null)
+          'recordedAt': recordedAt.toUtc().toIso8601String(),
       },
     );
   }

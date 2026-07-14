@@ -8,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:the_warehouse_gym/core/constants/app_colors.dart';
 import 'package:the_warehouse_gym/core/constants/sex_options.dart';
 import 'package:the_warehouse_gym/core/providers/session_providers.dart';
+import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/core/widgets/fitnessco_ui.dart';
 import 'package:the_warehouse_gym/features/client/account/presentation/viewmodels/client_account_viewmodel.dart';
 import 'package:the_warehouse_gym/features/client/bmi/domain/entities/bmi_entry.dart';
@@ -49,7 +50,19 @@ class CompleteProfilePage extends HookConsumerWidget {
     final workoutAvailability = useState<String?>('Morning');
     final recentlyDoctored = useState<bool>(false);
 
+    useEffect(() {
+      if (uid.isNotEmpty) {
+        viewModel.loadProfile(uid);
+      }
+      return null;
+    }, [uid]);
+
     Future<void> onSubmit() async {
+      if (uid.isEmpty) {
+        showInfoToast('Session expired. Please sign in again.');
+        return;
+      }
+
       final requiredFields = {
         'First Name': firstNameCtrl.text.trim(),
         'Last Name': lastNameCtrl.text.trim(),
@@ -69,18 +82,20 @@ class CompleteProfilePage extends HookConsumerWidget {
       }
 
       final data = {
+        'firstName': firstNameCtrl.text.trim(),
+        'lastName': lastNameCtrl.text.trim(),
         'accountInitialized': true,
         'profileDetails': {
           'firstName': firstNameCtrl.text.trim(),
           'lastName': lastNameCtrl.text.trim(),
-          'age': int.tryParse(ageCtrl.text.trim()) ?? 0,
+          'age': ageCtrl.text.trim(),
           'sex': SexOptions.normalize(sex.value ?? SexOptions.defaultValue),
           'height': double.tryParse(heightCtrl.text.trim()) ?? 0.0,
           'weight': double.tryParse(weightCtrl.text.trim()) ?? 0.0,
           'workoutExperience': workoutExperience.value ?? 'Beginner',
           'workoutAvailability': workoutAvailability.value ?? 'Morning',
-          'workoutFrequency': int.tryParse(workoutFreqCtrl.text.trim()) ?? 0,
-          'sleepHours': int.tryParse(sleepHoursCtrl.text.trim()) ?? 0,
+          'workoutFrequency': workoutFreqCtrl.text.trim(),
+          'sleepHours': sleepHoursCtrl.text.trim(),
           'illnesses': illnessesCtrl.text.trim(),
           'allergies': allergiesCtrl.text.trim(),
           'injuries': injuriesCtrl.text.trim(),
@@ -91,12 +106,14 @@ class CompleteProfilePage extends HookConsumerWidget {
           'muscleGoal': muscleGoalCtrl.text.trim(),
           'dedicationSpan': dedicationSpanCtrl.text.trim(),
           'specialPlans': specialPlansCtrl.text.trim(),
-          'recentlyDoctored': recentlyDoctored.value,
+          'recentlyDoctored': recentlyDoctored.value ? 'true' : 'false',
         },
       };
 
       final success = await viewModel.updateProfile(uid, data);
       if (!success || !context.mounted) return;
+
+      ref.read(sessionServiceProvider).markAccountInitialized();
 
       final height = double.tryParse(heightCtrl.text.trim()) ?? 0.0;
       final weight = double.tryParse(weightCtrl.text.trim()) ?? 0.0;

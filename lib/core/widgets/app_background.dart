@@ -30,8 +30,7 @@ class HomeBackground extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image:
-              AssetImage('assets/images/backgrounds/main client dashboard.png'),
+          image: AssetImage('assets/images/backgrounds/register.png'),
           fit: BoxFit.cover,
         ),
       ),

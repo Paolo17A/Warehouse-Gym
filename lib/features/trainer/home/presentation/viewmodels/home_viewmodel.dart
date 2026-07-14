@@ -1,4 +1,5 @@
 import 'package:the_warehouse_gym/core/di/injection.dart';
+import 'package:the_warehouse_gym/core/session/session_service.dart';
 import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/features/shared/account/domain/entities/full_user.dart';
 import 'package:the_warehouse_gym/features/trainer/account/domain/usecases/trainer_account_usecase.dart';
@@ -16,11 +17,12 @@ class HomeViewModel extends StateNotifier<HomeState> {
         super(const HomeState.initial());
 
   Future<void> loadDashboard(String uid) async {
+    if (uid.isEmpty) return;
     final sameProfile = _activeUid == uid;
     _activeUid = uid;
     _setLoadingState(sameProfile);
     final result = await _account.getProfile(uid);
-    if (_activeUid != uid) return;
+    if (_activeUid != uid || sl<SessionService>().currentUser == null) return;
     result.fold(
       (failure) {
         showFailureToast(failure);

@@ -21,10 +21,10 @@ class AdminTrainerRow extends StatelessWidget {
     final currentClients = trainer['currentClients'] is List
         ? trainer['currentClients'] as List
         : <dynamic>[];
-    final profileDetails =
-        trainer['profileDetails'] as Map<String, dynamic>? ?? {};
-    final sex = profileDetails['sex'] as String? ?? '';
-    final age = profileDetails['age'] ?? 0;
+    final trainerProfile =
+        trainer['trainerProfile'] as Map<String, dynamic>? ?? {};
+    final sex = trainerProfile['sex'] as String? ?? '';
+    final age = trainerProfile['age'] ?? '';
 
     return GestureDetector(
       onTap: onTap,

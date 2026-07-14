@@ -89,7 +89,7 @@ class WorkoutPrescriptionModel {
     final payload = <String, dynamic>{
       'clientId': clientId,
       'description': description,
-      'workoutDate': workoutDate.toIso8601String(),
+      'workoutDate': workoutDate.toUtc().toIso8601String(),
       'workout': rawWorkout,
     };
     if (trainerId != null && trainerId!.isNotEmpty) {

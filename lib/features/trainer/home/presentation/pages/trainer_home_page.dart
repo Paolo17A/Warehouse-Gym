@@ -21,6 +21,7 @@ class TrainerHomePage extends HookConsumerWidget {
     final homeState = ref.watch(homeViewModelProvider);
 
     useEffect(() {
+      if (uid.isEmpty) return null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(homeViewModelProvider.notifier).loadDashboard(uid);
       });
@@ -46,9 +47,19 @@ class TrainerHomePage extends HookConsumerWidget {
     final certifications = trainerProfile?.certifications ?? [];
     final interests = trainerProfile?.interests ?? [];
     final specialties = trainerProfile?.specialty ?? [];
-    final firstName =
-        fullUser?.clientProfile?.firstName ?? fullUser?.email ?? '';
-    final lastName = fullUser?.clientProfile?.lastName ?? '';
+    final displayName = (fullUser?.fullName.isNotEmpty == true)
+        ? fullUser!.fullName
+        : (fullUser?.email ?? '');
+
+    Future<void> refreshHome() async {
+      if (uid.isEmpty) return;
+      await ref.read(homeViewModelProvider.notifier).refresh(uid);
+    }
+
+    Future<void> openAndRefresh(String route) async {
+      await context.push(route);
+      if (context.mounted) await refreshHome();
+    }
 
     return DefaultTabController(
       length: 3,
@@ -57,137 +68,136 @@ class TrainerHomePage extends HookConsumerWidget {
         appBar: homeAppBar(
           context,
           ref: ref,
-          onRefresh: () =>
-              ref.read(homeViewModelProvider.notifier).refresh(uid),
-          title: Column(
-            children: [
-              fitnesscoText(
-                '$firstName $lastName',
-                textStyle: blackBoldStyle(),
-              ),
-              fitnesscoText(
-                '$clientCount Client${clientCount != 1 ? 's' : ''}',
-                textStyle: blackBoldStyle(size: 15),
-              ),
-            ],
+          title: fitnesscoText(
+            displayName,
+            textStyle: blackBoldStyle(),
           ),
         ),
         body: SwitchedLoadingContainer(
-          isLoading: homeState.isLoading,
+          isLoading: homeState is Loading,
           child: HomeBackground(
             child: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: buildProfileImage(
-                      profileImageURL: fullUser?.profileImageURL ?? '',
-                      radius: 50,
-                    ),
-                  ),
-                  const Gap(40),
-                  Column(
+              child: RefreshIndicator(
+                color: AppColors.purpleSnail,
+                onRefresh: refreshHome,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
                     children: [
-                      SizedBox(
-                        height: 20,
-                        width: 200,
-                        child: fitnesscoText(
-                          fullUser?.email ?? '',
-                          textStyle: blackBoldStyle(size: 15),
-                        ),
-                      ),
-                      const Gap(4),
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: fitnesscoText(
-                          trainerProfile?.contactNumber ?? '',
-                          textStyle: blackBoldStyle(size: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: buildProfileImage(
+                          profileImageURL: fullUser?.profileImageURL ?? '',
+                          radius: 50,
                         ),
                       ),
-                      fitnesscoText(
-                        (trainerProfile?.address.isNotEmpty == true)
-                            ? trainerProfile!.address
-                            : 'NO ADDRESS',
-                        textStyle: whiteBoldStyle(size: 15),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
-                    child: Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Column(
+                      const Gap(40),
+                      Column(
                         children: [
-                          homeRowContainer(
-                            iconPath: 'assets/images/icons/view_my_clients.png',
-                            label: 'View My Clients',
-                            onPress: () =>
-                                context.push(AppRouter.trainerClients),
-                          ),
-                          homeRowContainer(
-                            iconPath:
-                                'assets/images/icons/view_my_schedule.png',
-                            label: 'View My Schedule',
-                            onPress: () =>
-                                context.push(AppRouter.trainerSchedule),
-                          ),
-                          homeRowContainer(
-                            iconPath:
-                                'assets/images/icons/profile_description.png',
-                            label: 'Profile Description',
-                            onPress: () =>
-                                context.push(AppRouter.editTrainerProfile),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      TabBar(
-                        tabs: [
-                          Tab(
+                          SizedBox(
+                            height: 20,
+                            width: 200,
                             child: fitnesscoText(
-                              'CERTIFICATIONS',
-                              textStyle: blackBoldStyle(size: 12),
-                            ),
-                          ),
-                          Tab(
-                            child: fitnesscoText(
-                              'INTERESTS',
+                              fullUser?.email ?? '',
                               textStyle: blackBoldStyle(size: 15),
                             ),
                           ),
-                          Tab(
+                          const Gap(4),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
                             child: fitnesscoText(
-                              'TRAINING SPECIALTY',
-                              textStyle: blackBoldStyle(size: 14),
+                              trainerProfile?.contactNumber ?? '',
+                              textStyle: blackBoldStyle(size: 15),
+                            ),
+                          ),
+                          fitnesscoText(
+                            (trainerProfile?.address.isNotEmpty == true)
+                                ? trainerProfile!.address
+                                : 'NO ADDRESS',
+                            textStyle: whiteBoldStyle(size: 15),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 30),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Column(
+                            children: [
+                              homeRowContainer(
+                                iconPath:
+                                    'assets/images/icons/view_my_clients.png',
+                                label: 'View My Clients',
+                                onPress: () =>
+                                    openAndRefresh(AppRouter.trainerClients),
+                              ),
+                              homeRowContainer(
+                                iconPath:
+                                    'assets/images/icons/view_my_schedule.png',
+                                label: 'View My Schedule',
+                                onPress: () =>
+                                    openAndRefresh(AppRouter.trainerSchedule),
+                              ),
+                              homeRowContainer(
+                                iconPath:
+                                    'assets/images/icons/profile_description.png',
+                                label: 'Profile Description',
+                                onPress: () => openAndRefresh(
+                                  AppRouter.editTrainerProfile,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          TabBar(
+                            tabs: [
+                              Tab(
+                                child: fitnesscoText(
+                                  'CERTIFICATIONS',
+                                  textStyle: blackBoldStyle(size: 12),
+                                ),
+                              ),
+                              Tab(
+                                child: fitnesscoText(
+                                  'INTERESTS',
+                                  textStyle: blackBoldStyle(size: 15),
+                                ),
+                              ),
+                              Tab(
+                                child: fitnesscoText(
+                                  'TRAINING SPECIALTY',
+                                  textStyle: blackBoldStyle(size: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: 200,
+                            child: TabBarView(
+                              children: [
+                                _tagGridTab(
+                                  items: certifications,
+                                  tileBuilder: _yellowPinkTile,
+                                ),
+                                _tagGridTab(
+                                  items: interests,
+                                  tileBuilder: _greenBlueTile,
+                                ),
+                                _tagGridTab(
+                                  items: specialties,
+                                  tileBuilder: _yellowPinkTile,
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(
-                        height: 200,
-                        child: TabBarView(
-                          children: [
-                            _tagGridTab(
-                              items: certifications,
-                              tileBuilder: _yellowPinkTile,
-                            ),
-                            _tagGridTab(
-                              items: interests,
-                              tileBuilder: _greenBlueTile,
-                            ),
-                            _tagGridTab(
-                              items: specialties,
-                              tileBuilder: _yellowPinkTile,
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

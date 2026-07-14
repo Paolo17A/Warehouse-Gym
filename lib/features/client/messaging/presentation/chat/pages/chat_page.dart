@@ -97,7 +97,8 @@ class ChatPage extends HookConsumerWidget {
                 }
                 return;
               }
-              final resolvedName = '${other.firstName} ${other.lastName}'.trim();
+              final resolvedName =
+                  '${other.firstName} ${other.lastName}'.trim();
               if (resolvedName.isNotEmpty) displayName.value = resolvedName;
               isAccessValid.value = true;
             },
@@ -121,19 +122,39 @@ class ChatPage extends HookConsumerWidget {
       final socket = sl<ChatSocketService>();
       StreamSubscription<dynamic>? messageSub;
       StreamSubscription<dynamic>? errorSub;
+      var cancelled = false;
 
       Future<void> connect() async {
+        // Defer notifier updates — mutating providers during build/effect setup throws.
+        await Future<void>.delayed(Duration.zero);
+        if (cancelled) return;
+
+        messagingVm.beginLoading();
         try {
           final token = await sl<AuthSecureStorage>().getToken();
+          if (cancelled) return;
           await socket.connect(token);
-          await socket.joinChat(otherUid);
+          if (cancelled) return;
+
+          // Subscribe before joinChat — broadcast streams do not replay history.
           messageSub = socket.messageStream.listen(
-            (models) => messagingVm.setMessages(
-              models.map((m) => m.toEntity()).toList(),
-            ),
+            (models) {
+              if (cancelled) return;
+              messagingVm.setMessages(
+                models.map((m) => m.toEntity()).toList(),
+              );
+            },
           );
           errorSub = socket.errorStream.listen(showErrorToast);
+
+          final history = await socket.joinChat(otherUid);
+          if (cancelled) return;
+          messagingVm.setMessages(
+            history.map((m) => m.toEntity()).toList(),
+          );
         } catch (e) {
+          if (cancelled) return;
+          messagingVm.setMessages(const []);
           if (context.mounted) {
             showErrorToast('Unable to connect to chat');
           }
@@ -142,11 +163,16 @@ class ChatPage extends HookConsumerWidget {
 
       connect();
 
-      return () async {
-        await messageSub?.cancel();
-        await errorSub?.cancel();
-        await socket.leaveChat();
-        await socket.disconnect();
+      return () {
+        cancelled = true;
+        messageSub?.cancel();
+        errorSub?.cancel();
+        // Leave/disconnect and reset after dispose finishes (Riverpod-safe).
+        Future(() async {
+          await socket.leaveChat();
+          await socket.disconnect();
+          messagingVm.reset();
+        });
       };
     }, [currentUid, otherUid, isAccessValid.value]);
 
@@ -166,7 +192,13 @@ class ChatPage extends HookConsumerWidget {
       );
     }
 
-    if (isAccessValid.value != true || messagingState.isLoading) {
+    final waitingForMessages = messagingState.maybeMap(
+      initial: (_) => true,
+      loading: (_) => true,
+      orElse: () => false,
+    );
+
+    if (isAccessValid.value != true || waitingForMessages) {
       return FitnesscoScreenShell(
         appBar: chatAppBar(),
         body: const ChatBackground(child: LoadingWidget()),
@@ -245,19 +277,22 @@ class ChatPage extends HookConsumerWidget {
                   : ListView.builder(
                       controller: scrollController,
                       reverse: true,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.only(
-                        bottom: 40,
+                        bottom: 12,
                         left: 13,
                         right: 13,
+                        top: 8,
                       ),
                       itemCount: messagingState.messages.length,
                       itemBuilder: (context, index) {
                         final msg = messagingState.messages[index];
                         final isMe = msg.senderId == currentUid;
-                        final nextMessage = index + 1 <
-                                messagingState.messages.length
-                            ? messagingState.messages[index + 1]
-                            : null;
+                        final nextMessage =
+                            index + 1 < messagingState.messages.length
+                                ? messagingState.messages[index + 1]
+                                : null;
                         final sameSenderAsNext =
                             nextMessage?.senderId == msg.senderId;
 

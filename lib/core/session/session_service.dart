@@ -70,8 +70,23 @@ class SessionService {
   }
 
   Future<void> signOut() async {
-    await _storage.clearAll();
+    // Clear UI session first so home pages don't refetch with a wiped token.
     _setUser(null);
+    await _storage.clearAll();
+  }
+
+  void markAccountInitialized() {
+    final user = _currentUser;
+    if (user == null || user.accountInitialized) return;
+    _setUser(
+      AppUser(
+        uid: user.uid,
+        email: user.email,
+        accountType: user.accountType,
+        accountInitialized: true,
+        profileImageURL: user.profileImageURL,
+      ),
+    );
   }
 
   void _setUser(AppUser? user) {

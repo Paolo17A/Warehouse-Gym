@@ -3,14 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:the_warehouse_gym/core/constants/app_colors.dart';
 import 'package:the_warehouse_gym/core/constants/sex_options.dart';
 import 'package:the_warehouse_gym/core/errors/failures.dart';
 import 'package:the_warehouse_gym/core/providers/session_providers.dart';
-import 'package:the_warehouse_gym/core/router/app_router.dart';
 import 'package:the_warehouse_gym/core/widgets/fitnessco_ui.dart';
 import 'package:the_warehouse_gym/core/widgets/loading_widget.dart';
 import 'package:the_warehouse_gym/core/widgets/no_internet_widget.dart';
@@ -91,7 +89,6 @@ class EditClientProfilePage extends HookConsumerWidget {
     final dedicationSpan = useState<String>(_dedicationSpanChoices.first);
     final recentlyDoctored = useState<bool>(false);
     final selectedImagePath = useState<String?>(null);
-    final currentBmi = useState<double>(0);
 
     useEffect(() {
       if (uid.isEmpty) return null;
@@ -109,11 +106,6 @@ class EditClientProfilePage extends HookConsumerWidget {
 
       final user = state.user!;
       final profile = user.clientProfile;
-
-      if (user.bmiHistory.isNotEmpty) {
-        currentBmi.value =
-            (user.bmiHistory.last['bmiValue'] as num?)?.toDouble() ?? 0;
-      }
 
       if (profile != null) {
         firstNameCtrl.text = profile.firstName;
@@ -158,12 +150,6 @@ class EditClientProfilePage extends HookConsumerWidget {
       if (image != null) {
         selectedImagePath.value = image.path;
       }
-    }
-
-    Future<void> removeProfileImage() async {
-      selectedImagePath.value = null;
-      await viewModel.updateProfile(uid, {'profileImageURL': ''});
-      viewModel.refresh(uid);
     }
 
     Future<void> onSave() async {
@@ -248,26 +234,49 @@ class EditClientProfilePage extends HookConsumerWidget {
                       child: Column(
                         children: [
                           const Gap(20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _profileImageSection(
-                                profileImageURL: profileImageURL,
-                                selectedImagePath: selectedImagePath.value,
-                                onUpload: pickImage,
-                                onRemove: profileImageURL.isNotEmpty
-                                    ? removeProfileImage
-                                    : null,
+                          Center(
+                            child: GestureDetector(
+                              onTap: pickImage,
+                              child: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 56,
+                                    backgroundColor:
+                                        AppColors.electricLavender,
+                                    backgroundImage:
+                                        selectedImagePath.value != null
+                                            ? FileImage(
+                                                File(selectedImagePath.value!),
+                                              )
+                                            : profileImageURL.isNotEmpty
+                                                ? NetworkImage(
+                                                    profileImageURL,
+                                                  )
+                                                : const AssetImage(
+                                                    'assets/images/defaultProfile.png',
+                                                  ) as ImageProvider,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.purpleSnail,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              _bmiSection(
-                                bmi: currentBmi.value,
-                                onUpdateBmi: () =>
-                                    context.push(AppRouter.bmiHistory),
-                              ),
-                            ],
+                            ),
                           ),
-                          const Gap(16),
+                          const Gap(24),
                           _profileTabs(
                             screenHeight: screenHeight,
                             profileTab: _profileTab(
@@ -316,100 +325,6 @@ class EditClientProfilePage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _profileImageSection({
-    required String profileImageURL,
-    required String? selectedImagePath,
-    required VoidCallback onUpload,
-    required VoidCallback? onRemove,
-  }) {
-    return SizedBox(
-      width: 200,
-      child: Row(
-        children: [
-          if (selectedImagePath != null)
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: FileImage(File(selectedImagePath)),
-            )
-          else
-            clientProfileImage(profileImageURL),
-          const Gap(10),
-          SizedBox(
-            height: 70,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 30,
-                  child: ElevatedButton(
-                    onPressed: onUpload,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: fitnesscoText(
-                      'UPLOAD',
-                      textStyle: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ),
-                if (onRemove != null)
-                  SizedBox(
-                    height: 25,
-                    child: ElevatedButton(
-                      onPressed: onRemove,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: fitnesscoText(
-                        'REMOVE',
-                        textStyle: const TextStyle(fontSize: 10),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _bmiSection({
-    required double bmi,
-    required VoidCallback onUpdateBmi,
-  }) {
-    return Column(
-      children: [
-        Text(
-          bmi > 0 ? bmi.toStringAsFixed(2) : '—',
-          style: const TextStyle(fontSize: 45, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(
-          height: 30,
-          child: ElevatedButton(
-            onPressed: onUpdateBmi,
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: fitnesscoText(
-              'Update BMI',
-              textStyle: const TextStyle(fontSize: 12),
-            ),
-          ),
-        ),
-      ],
     );
   }
 

@@ -36,9 +36,12 @@ class ClientSelectedTrainerProfilePage extends HookConsumerWidget {
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         viewModel.loadProfile(trainerUid);
+        if (clientUid.isNotEmpty) {
+          clientAccountViewModel.loadProfile(clientUid);
+        }
       });
       return null;
-    }, [trainerUid]);
+    }, [trainerUid, clientUid]);
 
     useEffect(() {
       if (clientUid.isEmpty) return null;
@@ -64,7 +67,8 @@ class ClientSelectedTrainerProfilePage extends HookConsumerWidget {
 
     final user = state.user;
     final relationship = clientAccountState.user?.trainerRelationship;
-    final isConfirmedTrainer = relationship?.currentTrainer == trainerUid &&
+    final currentTrainerId = relationship?.currentTrainer.trim() ?? '';
+    final isConfirmedTrainer = currentTrainerId == trainerUid &&
         (relationship?.isConfirmed ?? false);
     final alreadyRequested = hasPendingRequest.value ?? false;
 
@@ -87,13 +91,37 @@ class ClientSelectedTrainerProfilePage extends HookConsumerWidget {
       }
     }
 
+    void openChat() {
+      final name = user?.fullName ?? 'Trainer';
+      context.push(
+        AppRouter.chat(
+          trainerUid,
+          name: name,
+          isClient: true,
+        ),
+      );
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: largeGradientAppBar('All Trainers'),
       body: ViewTrainerBackground(
         child: SafeArea(
           child: RefreshIndicator(
-            onRefresh: () => viewModel.refresh(trainerUid),
+            onRefresh: () async {
+              await Future.wait([
+                viewModel.refresh(trainerUid),
+                if (clientUid.isNotEmpty)
+                  clientAccountViewModel.refresh(clientUid),
+              ]);
+              if (clientUid.isNotEmpty) {
+                hasPendingRequest.value =
+                    await clientAccountViewModel.hasPendingTrainerRequest(
+                  clientUid,
+                  trainerUid,
+                );
+              }
+            },
             color: AppColors.purpleSnail,
             child: user == null
                 ? ListView(
@@ -123,18 +151,9 @@ class ClientSelectedTrainerProfilePage extends HookConsumerWidget {
                         const Gap(16),
                         Center(
                           child: AuthGradientButton(
-                            label: 'CHAT TRAINER',
-                            width: 220,
-                            onTap: () {
-                              final name = user.fullName;
-                              context.push(
-                                AppRouter.chat(
-                                  trainerUid,
-                                  name: name,
-                                  isClient: true,
-                                ),
-                              );
-                            },
+                            label: 'Message This Trainer',
+                            width: 280,
+                            onTap: openChat,
                           ),
                         ),
                       ] else

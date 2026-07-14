@@ -1,4 +1,5 @@
 import 'package:the_warehouse_gym/core/di/injection.dart';
+import 'package:the_warehouse_gym/core/session/session_service.dart';
 import 'package:the_warehouse_gym/core/utils/toast_utils.dart';
 import 'package:the_warehouse_gym/features/client/workout/domain/entities/workout_prescription.dart';
 import 'package:the_warehouse_gym/features/client/workout/domain/entities/workout_session.dart';
@@ -167,9 +168,11 @@ class WorkoutViewModel extends StateNotifier<WorkoutState> {
   }
 
   Future<void> loadWorkoutSessionData(String uid) async {
+    if (uid.isEmpty) return;
     _setLoadingState();
     final prescriptionsResult = await _workout.getPrescribedWorkouts(uid);
     final historyResult = await _workout.getWorkoutHistory(uid);
+    if (sl<SessionService>().currentUser == null) return;
     prescriptionsResult.fold(
       (failure) {
         state = WorkoutState.failed(failure);

@@ -73,8 +73,16 @@ class MessagingViewModel extends StateNotifier<MessagingState> {
   }) =>
       loadMessages(currentUid, otherUid, isClientView: isClientView);
 
+  void beginLoading() {
+    state = const MessagingState.loading();
+  }
+
   void setMessages(List<Message> messages) {
     state = MessagingState.loaded(messages);
+  }
+
+  void reset() {
+    state = const MessagingState.initial();
   }
 
   List<Message> _currentMessages() => state.maybeMap(

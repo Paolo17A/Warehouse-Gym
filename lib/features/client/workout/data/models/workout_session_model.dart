@@ -33,9 +33,29 @@ class WorkoutSessionModel {
 
   Map<String, dynamic> toApi() {
     return {
-      'dateTime': dateTime.toIso8601String(),
-      'exercises': exercises,
+      'dateTime': dateTime.toUtc().toIso8601String(),
+      'exercises': _deepJsonMap(exercises),
     };
+  }
+
+  static Map<String, dynamic> _deepJsonMap(Map<dynamic, dynamic> source) {
+    return source.map((key, value) {
+      final k = key.toString();
+      if (value is Map) {
+        return MapEntry(k, _deepJsonMap(Map<dynamic, dynamic>.from(value)));
+      }
+      if (value is List) {
+        return MapEntry(
+          k,
+          value
+              .map((item) => item is Map
+                  ? _deepJsonMap(Map<dynamic, dynamic>.from(item))
+                  : item)
+              .toList(),
+        );
+      }
+      return MapEntry(k, value);
+    });
   }
 
   Map<String, dynamic> toFirestore() => toApi();

@@ -32,19 +32,30 @@ class ClientAccountViewModel extends StateNotifier<ClientAccountState> {
 
   Future<bool> updateProfile(String uid, Map<String, dynamic> data) async {
     final user = _currentUser();
-    if (user == null) return false;
+    if (user != null) {
+      state = ClientAccountState.submitting(user);
+    } else {
+      state = const ClientAccountState.loading();
+    }
 
-    state = ClientAccountState.submitting(user);
     final result = await _account.updateProfile(uid, data);
     return result.fold(
       (failure) {
         showFailureToast(failure);
-        state = ClientAccountState.loaded(user);
+        if (user != null) {
+          state = ClientAccountState.loaded(user);
+        } else {
+          state = ClientAccountState.failed(failure);
+        }
         return false;
       },
       (_) {
         showSuccessToast('Profile updated successfully.');
-        state = ClientAccountState.loaded(user);
+        if (user != null) {
+          state = ClientAccountState.loaded(user);
+        } else {
+          state = const ClientAccountState.initial();
+        }
         return true;
       },
     );
